@@ -80,9 +80,6 @@ void printRPM() {
 }
 
 void loop() {
-  // delay(1000);
-  // printRPM();
-
   // 检查是否有可用的串行数据
   if (Serial.available()) {
     // 读取串行数据到字符串
@@ -92,7 +89,7 @@ void loop() {
       if (!isspace(ch) || ch == '\n') {
         jsonString += ch;
       }
-      delay(10); // 给串行缓冲区时间来接收更多数据
+      delay(5); // 给串行缓冲区时间来接收更多数据
     }
 
     // 打印接收到的JSON字符串
