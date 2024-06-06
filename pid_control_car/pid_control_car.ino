@@ -9,8 +9,7 @@ const int offsetm2 = 1;
 const int offsetm3 = 1;
 const int offsetm4 = 1;
 
-const int encoderPinA = 2; // 假设编码器连接到引脚2
-const int encoderPinB = 3; // 假设编码器连接到引脚3
+const int encoderPinA = 3; // 假设编码器连接到引脚3
 volatile int encoderTicks = 0;
 unsigned long lastTime = 0;
 const int encoderTicksPerRevolution = 20; // 每圈的编码器脉冲数
@@ -29,29 +28,16 @@ void setup() {
   motorDriver.motorConfig(offsetm1, offsetm2, offsetm3, offsetm4);
   motorDriver.setPWMFreq(50); // 控制舵机时，需要设置PWM频率 ~50
   servo.attach(10);
-  delay(1000);   // wait 2s
+  delay(1000);   // wait 1s
   Serial.println("Start...");
 
   pinMode(encoderPinA, INPUT);
-  pinMode(encoderPinB, INPUT);
   attachInterrupt(digitalPinToInterrupt(encoderPinA), encoderISR, RISING);
   lastTime = millis();
 }
 
 void encoderISR() {
-  if (digitalRead(encoderPinA) == HIGH) {
-    if (digitalRead(encoderPinB) == LOW) {
-      encoderTicks++;
-    } else {
-      encoderTicks--;
-    }
-  } else {
-    if (digitalRead(encoderPinB) == LOW) {
-      encoderTicks--;
-    } else {
-      encoderTicks++;
-    }
-  }
+  encoderTicks++;
 }
 
 void controlLeftWheels(int speed) {
@@ -74,9 +60,17 @@ void printRPM() {
   // 计算 RPM
   unsigned long currentTime = millis();
   unsigned long timeDifference = currentTime - lastTime;
+  if (timeDifference == 0) {
+    // 避免除以0的情况
+    return;
+  }
   float rpm = (encoderTicks / (float)encoderTicksPerRevolution) / (timeDifference / 60000.0);
 
   // 打印 RPM
+  Serial.print("encoderTicks: ");
+  Serial.println(encoderTicks);
+  Serial.print("timeDifference: ");
+  Serial.println(timeDifference);
   Serial.print("Current RPM: ");
   Serial.println(rpm);
 
@@ -86,7 +80,8 @@ void printRPM() {
 }
 
 void loop() {
-  printRPM();
+  // delay(1000);
+  // printRPM();
 
   // 检查是否有可用的串行数据
   if (Serial.available()) {
