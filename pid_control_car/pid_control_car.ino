@@ -72,8 +72,16 @@ void printRPM() {
 
 void loop() {
   if (Serial.available()) {
+    
+    if (Serial.peek() == 'I') {
+      Serial.read(); // 消耗 'I' 字符
+      // 回傳識別資訊：類型,vendorID,productID,序列號
+      Serial.println("MOTOR_CONTROLLER,2341,0043,A000002");
+      return; // 結束本次循環
+    }
     StaticJsonDocument<200> doc;
     DeserializationError error = deserializeJson(doc, Serial);
+
     if (error) {
       Serial.print("JSON parsing failed: ");
       Serial.println(error.c_str());
