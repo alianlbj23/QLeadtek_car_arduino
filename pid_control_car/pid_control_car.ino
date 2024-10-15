@@ -16,8 +16,6 @@ Servo servo = Servo();
 
 void setup() {
   Serial.begin(115200);
-  Serial.println(CUSTOM_ID);
-  delay(1000);
   motorDriver.begin();
   motorDriver.motorConfig(offsetm1, offsetm2, offsetm3, offsetm4);
   motorDriver.setPWMFreq(50);
@@ -59,22 +57,22 @@ void loop() {
       Serial.println(error.c_str());
       return;
     }
-    
+
+
     if (doc.containsKey("command") && doc["command"] == "I") {
-      Serial.println(CUSTOM_ID);
-    }
-    else{
-      JsonArray targetVelArray = doc["target_vel"];
-      if (targetVelArray.size() == 2) {
-        int rearWheelSpeed = wheelSpeedRatio(targetVelArray[0]);
-        int frontWheelSpeed = wheelSpeedRatio(targetVelArray[1]);
-        controlLeftWheels(rearWheelSpeed);
-        controlRightWheels(frontWheelSpeed);
+        Serial.println(CUSTOM_ID);
       } 
-      // else {
-      //   Serial.println("Invalid target_vel array size");
-      // }
+
+    else{
+       JsonArray targetVelArray = doc["target_vel"];
+    if (targetVelArray.size() == 2) {
+      int rearWheelSpeed = wheelSpeedRatio(targetVelArray[0]);
+      int frontWheelSpeed = wheelSpeedRatio(targetVelArray[1]);
+      controlLeftWheels(rearWheelSpeed);
+      controlRightWheels(frontWheelSpeed);
+    } else {
+      Serial.println("Invalid target_vel array size");
     }
-    
+    }
   }
 }
