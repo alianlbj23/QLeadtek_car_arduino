@@ -4,7 +4,7 @@
 #define DEVICE_TYPE "MOTOR_CONTROLLER"
 #define CUSTOM_ID "MOTOR001"
 #define MOTORTYPE YF_IIC_RZ  // rz7889
-uint8_t SerialDebug = 1; // 串口打印调试 0-否 1-是
+uint8_t SerialDebug = 1;
 
 const int offsetm1 = 1;
 const int offsetm2 = 1;
@@ -22,13 +22,10 @@ Servo servo = Servo();
 void setup() {
   Serial.begin(115200);
   Serial.println(CUSTOM_ID);
-  // Serial.println("Motor Drive test!");
   motorDriver.begin();
   motorDriver.motorConfig(offsetm1, offsetm2, offsetm3, offsetm4);
   motorDriver.setPWMFreq(50); // 控制舵机时，需要设置PWM频率 ~50
   servo.attach(10);
-  delay(1000);   // wait 1s
-  Serial.println("Start...");
 
   pinMode(encoderPinA, INPUT);
   attachInterrupt(digitalPinToInterrupt(encoderPinA), encoderISR, RISING);
@@ -55,48 +52,33 @@ int wheelSpeedRatio(int speed) {
   return newSpeed;
 }
 
-void printRPM() {
-  unsigned long currentTime = millis();
-  unsigned long timeDifference = currentTime - lastTime;
-  if (timeDifference == 0) {
-    return;
-  }
-  float rpm = (encoderTicks / (float)encoderTicksPerRevolution) / (timeDifference / 60000.0);
-  Serial.print("encoderTicks: ");
-  Serial.println(encoderTicks);
-  Serial.print("timeDifference: ");
-  Serial.println(timeDifference);
-  Serial.print("Current RPM: ");
-  Serial.println(rpm);
-  encoderTicks = 0;
-  lastTime = currentTime;
-}
-
 void loop() {
   if (Serial.available()) {
-    char command = Serial.read();
-    if (command == 'I') {
-         Serial.print(DEVICE_TYPE);
-         Serial.print(",");
-         Serial.println(CUSTOM_ID);
-    }
+    String jsonString = Serial.readString();
     StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc, Serial);
+    DeserializationError error = deserializeJson(doc, jsonString);
 
     if (error) {
       Serial.print("JSON parsing failed: ");
       Serial.println(error.c_str());
       return;
     }
-
-    JsonArray targetVelArray = doc["target_vel"];
-    if (targetVelArray.size() == 2) {
-      int rearWheelSpeed = wheelSpeedRatio(targetVelArray[0]);
-      int frontWheelSpeed = wheelSpeedRatio(targetVelArray[1]);
-      controlLeftWheels(rearWheelSpeed);
-      controlRightWheels(frontWheelSpeed);
-    } else {
-      Serial.println("Invalid target_vel array size");
+    
+    if (doc.containsKey("command") && doc["command"] == "I") {
+      Serial.println(CUSTOM_ID);
     }
+    else{
+      Serial.println("dsadsad");
+      JsonArray targetVelArray = doc["target_vel"];
+      if (targetVelArray.size() == 2) {
+        int rearWheelSpeed = wheelSpeedRatio(targetVelArray[0]);
+        int frontWheelSpeed = wheelSpeedRatio(targetVelArray[1]);
+        controlLeftWheels(rearWheelSpeed);
+        controlRightWheels(frontWheelSpeed);
+      } else {
+        Serial.println("Invalid target_vel array size");
+      }
+    }
+    
   }
 }
