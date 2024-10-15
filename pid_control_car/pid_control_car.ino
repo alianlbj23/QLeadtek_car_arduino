@@ -1,7 +1,8 @@
 #include <ArduinoJson.h>
 #include <Servo.h>
 #include "MotorDriver.h"
-
+#define DEVICE_TYPE "MOTOR_CONTROLLER"
+#define CUSTOM_ID "MOTOR001"
 #define MOTORTYPE YF_IIC_RZ  // rz7889
 uint8_t SerialDebug = 1; // 串口打印调试 0-否 1-是
 
@@ -20,7 +21,8 @@ Servo servo = Servo();
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Motor Drive test!");
+  Serial.println(CUSTOM_ID);
+  // Serial.println("Motor Drive test!");
   motorDriver.begin();
   motorDriver.motorConfig(offsetm1, offsetm2, offsetm3, offsetm4);
   motorDriver.setPWMFreq(50); // 控制舵机时，需要设置PWM频率 ~50
@@ -72,12 +74,11 @@ void printRPM() {
 
 void loop() {
   if (Serial.available()) {
-    
-    if (Serial.peek() == 'I') {
-      Serial.read(); // 消耗 'I' 字符
-      // 回傳識別資訊：類型,vendorID,productID,序列號
-      Serial.println("MOTOR_CONTROLLER,2341,0043,A000002");
-      return; // 結束本次循環
+    char command = Serial.read();
+    if (command == 'I') {
+         Serial.print(DEVICE_TYPE);
+         Serial.print(",");
+         Serial.println(CUSTOM_ID);
     }
     StaticJsonDocument<200> doc;
     DeserializationError error = deserializeJson(doc, Serial);
